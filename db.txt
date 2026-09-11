@@ -1,0 +1,74 @@
+this is my init_table:
+programs
+────────────────────────────
+id
+university
+program_name
+country
+city
+degree_type
+degree_level
+program_url
+
+subject_area
+curriculum_summary
+backend_fit
+overall_fit
+
+academic_eligibility
+english_requirement
+work_experience_requirement
+
+application_start
+application_deadline
+intake
+
+research_status
+eligibility_status
+
+uncertainties
+source_urls
+
+last_verified_at
+created_at
+updated_at
+
+
+=================================================
+============== CONSTRAINT =======================
+
+    CONSTRAINT backend_fit_range
+        CHECK (
+            backend_fit IS NULL
+            OR backend_fit BETWEEN 0 AND 100
+        ),
+
+    CONSTRAINT overall_fit_range
+        CHECK (
+            overall_fit IS NULL
+            OR overall_fit BETWEEN 0 AND 100
+        ),
+
+    CONSTRAINT research_status_values
+        CHECK (
+            research_status IN (
+                'discovered',
+                'researching',
+                'researched',
+                'verified',
+                'rejected'
+            )
+        ),
+
+    CONSTRAINT eligibility_status_values
+        CHECK (
+            eligibility_status IN (
+                'unknown',
+                'eligible',
+                'likely_eligible',
+                'conditional',
+                'likely_ineligible',
+                'ineligible'
+            )
+        )
+);
