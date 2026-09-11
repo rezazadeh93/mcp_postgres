@@ -43,6 +43,47 @@ services:
     networks:
       - hermes_net
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hermes_web
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://hermes:hermes@postgres:5432/hermes_db
+      FLASK_RUN_HOST: 0.0.0.0
+      FLASK_RUN_PORT: "8080"
+      FLASK_DEBUG: "False"
+    command: ["uv", "run", "--no-sync", "python", "web.py"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 256m
+    cpus: 0.5
+    networks:
+      - hermes_net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: hermes_pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@hermes.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 256m
+    cpus: 0.5
+    networks:
+      - hermes_net
+
 volumes:
   hermes_pg_data:
 

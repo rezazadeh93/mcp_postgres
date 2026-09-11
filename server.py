@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Iterator
-from contextlib import contextmanager
-from datetime import date, datetime
+from datetime import date
 from typing import Any
 
-import psycopg
 from fastmcp import FastMCP
-from psycopg.rows import dict_row
+
+from db import connection as db
+from db import jsonable as _jsonable
+from db import row_to_dict as _row_to_dict
 
 mcp = FastMCP("hermes-db")
 
@@ -46,38 +46,6 @@ ELIGIBILITY_STATUSES = {
     "likely_ineligible",
     "ineligible",
 }
-
-
-def _database_url() -> str:
-    url = os.environ.get("DATABASE_URL")
-    if not url:
-        raise RuntimeError(
-            "DATABASE_URL is not set. Example: "
-            "postgresql://hermes:hermes@127.0.0.1:5432/hermes_db"
-        )
-    return url
-
-
-@contextmanager
-def db() -> Iterator[psycopg.Connection]:
-    with psycopg.connect(_database_url(), row_factory=dict_row) as conn:
-        yield conn
-
-
-def _jsonable(value: Any) -> Any:
-    if isinstance(value, datetime):
-        return value.isoformat()
-    if isinstance(value, date):
-        return value.isoformat()
-    if isinstance(value, list):
-        return [_jsonable(item) for item in value]
-    return value
-
-
-def _row_to_dict(row: dict[str, Any] | None) -> dict[str, Any] | None:
-    if row is None:
-        return None
-    return {key: _jsonable(val) for key, val in row.items()}
 
 
 def _parse_date(value: str | None) -> date | None:
