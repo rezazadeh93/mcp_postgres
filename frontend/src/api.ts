@@ -1,4 +1,4 @@
-import type { Filters, FiltersResponse, Program, ProgramsResponse } from './types';
+import type { Filters, FiltersResponse, Flag, Program, ProgramsResponse } from './types';
 
 const API_PREFIX = '/api';
 
@@ -41,11 +41,11 @@ export async function markVisited(id: number): Promise<void> {
   });
 }
 
-export async function setMarker(id: number, marker: string | null): Promise<void> {
-  await fetchJson<{ marker: string | null }>(`${API_PREFIX}/programs/${id}/marker`, {
+export async function setFlags(id: number, flags: Flag[]): Promise<void> {
+  await fetchJson<{ flags: string[] }>(`${API_PREFIX}/programs/${id}/marker`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ marker }),
+    body: JSON.stringify({ flags }),
   });
 }
 

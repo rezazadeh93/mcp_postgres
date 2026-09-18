@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { fetchProgram, markVisited, setMarker } from '../api';
-import type { Program } from '../types';
-
-const markers = [
-  { key: 'snooze', label: 'Snooze' },
-  { key: 'important', label: 'Important' },
-  { key: 'want_to_apply', label: 'Want to apply' },
-];
+import { fetchProgram, markVisited, setFlags } from '../api';
+import type { Flag, Program } from '../types';
+import FlagControls from './FlagControls';
 
 function formatValue(value: string | number | string[] | null): string {
   if (value === null || value === undefined || value === '') return '-';
@@ -51,11 +46,11 @@ export default function ProgramDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const updateMarker = async (marker: string | null) => {
+  const updateFlagsForProgram = async (flags: Flag[]) => {
     if (!program) return;
-    await setMarker(program.id, marker);
+    await setFlags(program.id, flags);
     setProgram((prev) =>
-      prev ? { ...prev, marker: marker as Program['marker'], visited_at: prev.visited_at || new Date().toISOString() } : prev
+      prev ? { ...prev, flags, visited_at: prev.visited_at || new Date().toISOString() } : prev
     );
   };
 
@@ -83,20 +78,7 @@ export default function ProgramDetail() {
 
       <div className="card">
         <div className="marker-bar">
-          {markers.map(({ key, label }) => (
-            <button
-              key={key}
-              className={program.marker === key ? 'btn-primary' : 'btn-secondary'}
-              onClick={() => updateMarker(program.marker === key ? null : key)}
-            >
-              {label}
-            </button>
-          ))}
-          {program.marker && (
-            <button className="btn-secondary" onClick={() => updateMarker(null)}>
-              Clear marker
-            </button>
-          )}
+          <FlagControls flags={program.flags} onChange={updateFlagsForProgram} />
         </div>
       </div>
 

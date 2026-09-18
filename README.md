@@ -24,11 +24,14 @@ docker compose up -d
 
 First start runs [sql/init.sql](sql/init.sql) (table, CHECKs, indexes, `updated_at` trigger). Postgres data lives in the `hermes_pg_data` volume.
 
-For **existing** Postgres volumes, apply the marker/visit tracking migration before starting the web service:
+For **existing** Postgres volumes, apply the migrations before starting the web service:
 
 ```bash
 docker compose cp sql/migration_001_tags.sql postgres:/tmp/migration_001_tags.sql
 docker compose exec postgres psql -U hermes -d hermes_db -f /tmp/migration_001_tags.sql
+
+docker compose cp sql/migration_002_flags.sql postgres:/tmp/migration_002_flags.sql
+docker compose exec postgres psql -U hermes -d hermes_db -f /tmp/migration_002_flags.sql
 ```
 
 Wait until both services are healthy:
@@ -55,17 +58,24 @@ Supported filters on the list page:
 
 Sortable columns: `overall_fit`, `university`, `program_name`, `country`, `application_deadline`, `created_at`, `id`.
 
-### Persistent markers
+### Persistent flags
 
-Clicking a program marks it as visited and tints the row blue. You can also tag programs with:
+Clicking a program marks it as visited and tints the row. You can tag programs with multiple flags:
 
-| Marker | Button | Tint | Meaning |
-|---|---|---|---|
-| `snooze` | Snooze | amber | Must see again |
-| `important` | Important | rose | High priority |
-| `want_to_apply` | Apply | green | Plan to apply |
+| Group | Flag | Meaning |
+|---|---|---|
+| Status | `snooze` | Must see again |
+| Status | `important` | High priority |
+| Possibility | `low_possibility` | Low chance |
+| Possibility | `medium_possibility` | Medium chance |
+| Possibility | `high_possibility` | High chance |
+| Outcome | `for_applying` | Plan to apply (requires a possibility flag) |
+| Outcome | `no_fit` | Does not fit |
+| Outcome | `NOT_RELEVANT` | Not relevant |
 
-Markers are stored in the `program_tags` Postgres table and persist across sessions.
+`snooze` and `important` can be active together. Possibility flags are mutually exclusive. `no_fit` / `NOT_RELEVANT` disable possibility flags and clear `for_applying`. Each row has a **Flags** dropdown to set or reset flags.
+
+Flags are stored as a `TEXT[]` array in the `program_tags` Postgres table and persist across sessions.
 
 ## Wire Hermes (streamable HTTP)
 

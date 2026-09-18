@@ -32,7 +32,19 @@ ELIGIBILITY_STATUSES = [
     "ineligible",
 ]
 
-MARKERS = {"snooze", "important", "want_to_apply"}
+VALID_FLAGS = {
+    "snooze",
+    "important",
+    "low_possibility",
+    "medium_possibility",
+    "high_possibility",
+    "for_applying",
+    "no_fit",
+    "NOT_RELEVANT",
+}
+
+POSSIBILITY_FLAGS = {"low_possibility", "medium_possibility", "high_possibility"}
+EXCLUSION_FLAGS = {"no_fit", "NOT_RELEVANT"}
 
 LIST_COLUMNS = [
     "p.id",
@@ -129,7 +141,7 @@ def _build_programs_query() -> tuple[str, list[Any], int, int, int]:
     data_sql = (
         "SELECT "
         + ", ".join(LIST_COLUMNS)
-        + ", t.visited_at, t.marker"
+        + ", t.visited_at, t.flags"
         + " FROM programs p"
         + " LEFT JOIN program_tags t ON t.program_id = p.id"
         + where_sql
@@ -170,7 +182,7 @@ def api_get_program(program_id: int):
     with db() as conn:
         row = conn.execute(
             """
-            SELECT p.*, t.visited_at, t.marker
+            SELECT p.*, t.visited_at, t.flags
             FROM programs p
             LEFT JOIN program_tags t ON t.program_id = p.id
             WHERE p.id = %s
@@ -205,42 +217,70 @@ def api_visit_program(program_id: int):
     return jsonify({"visited": True})
 
 
+def _normalize_flags(data: dict[str, Any]) -> list[str]:
+    """Return a validated, de-duplicated flag list from the request body."""
+    if "flags" in data:
+        raw = data["flags"]
+        if not isinstance(raw, list):
+            abort(400, description="flags must be an array")
+        flags = [str(item).strip() for item in raw if item is not None and str(item).strip()]
+    elif "marker" in data:
+        marker = data.get("marker")
+        if marker is None:
+            return []
+        if marker == "want_to_apply":
+            marker = "for_applying"
+        if marker not in VALID_FLAGS:
+            abort(400, description=f"marker must be one of: {sorted(VALID_FLAGS)} or null")
+        return [marker]
+    else:
+        abort(400, description="request must include 'flags' array or legacy 'marker' field")
+
+    invalid = sorted({f for f in flags if f not in VALID_FLAGS})
+    if invalid:
+        abort(400, description=f"invalid flags: {invalid}; allowed: {sorted(VALID_FLAGS)}")
+
+    # Enforce mutual exclusion and dependency rules.
+    flag_set = set(flags)
+    possibilities = flag_set & POSSIBILITY_FLAGS
+    exclusions = flag_set & EXCLUSION_FLAGS
+
+    if len(possibilities) > 1:
+        abort(400, description=f"only one possibility flag allowed: {sorted(POSSIBILITY_FLAGS)}")
+    if len(exclusions) > 1:
+        abort(400, description=f"only one exclusion flag allowed: {sorted(EXCLUSION_FLAGS)}")
+    if exclusions and possibilities:
+        abort(400, description="exclusion flags cannot be set with possibility flags")
+    if "for_applying" in flag_set and not possibilities:
+        abort(400, description="for_applying requires a possibility flag")
+    if "for_applying" in flag_set and exclusions:
+        abort(400, description="for_applying cannot be set with exclusion flags")
+
+    return list(dict.fromkeys(flags))
+
+
 @app.route("/api/programs/<int:program_id>/marker", methods=["POST"])
 def api_set_marker(program_id: int):
     data = request.get_json(silent=True) or {}
-    marker = data.get("marker")
-
-    if marker is not None and marker not in MARKERS:
-        abort(400, description=f"marker must be one of: {sorted(MARKERS)} or null")
+    flags = _normalize_flags(data)
 
     with db() as conn:
         exists = conn.execute("SELECT 1 FROM programs WHERE id = %s", (program_id,)).fetchone()
         if not exists:
             abort(404, description="Program not found")
 
-        if marker is None:
-            conn.execute(
-                """
-                INSERT INTO program_tags (program_id, visited_at, marker)
-                VALUES (%s, now(), NULL)
-                ON CONFLICT (program_id)
-                DO UPDATE SET marker = NULL, visited_at = now()
-                """,
-                (program_id,),
-            )
-        else:
-            conn.execute(
-                """
-                INSERT INTO program_tags (program_id, visited_at, marker)
-                VALUES (%s, now(), %s)
-                ON CONFLICT (program_id)
-                DO UPDATE SET marker = %s, visited_at = now()
-                """,
-                (program_id, marker, marker),
-            )
+        conn.execute(
+            """
+            INSERT INTO program_tags (program_id, visited_at, flags)
+            VALUES (%s, now(), %s)
+            ON CONFLICT (program_id)
+            DO UPDATE SET flags = %s, visited_at = now()
+            """,
+            (program_id, flags, flags),
+        )
         conn.commit()
 
-    return jsonify({"marker": marker})
+    return jsonify({"flags": flags})
 
 
 @app.route("/api/filters", methods=["GET"])
@@ -257,7 +297,7 @@ def api_filters():
         {
             "research_statuses": RESEARCH_STATUSES,
             "eligibility_statuses": ELIGIBILITY_STATUSES,
-            "markers": sorted(MARKERS),
+            "flags": sorted(VALID_FLAGS),
             "countries": countries,
         }
     )

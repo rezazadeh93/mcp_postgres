@@ -1,4 +1,12 @@
-export type Marker = 'snooze' | 'important' | 'want_to_apply' | null;
+export type Flag =
+  | 'snooze'
+  | 'important'
+  | 'low_possibility'
+  | 'medium_possibility'
+  | 'high_possibility'
+  | 'for_applying'
+  | 'no_fit'
+  | 'NOT_RELEVANT';
 
 export interface Program {
   id: number;
@@ -27,7 +35,7 @@ export interface Program {
   created_at: string;
   updated_at: string;
   visited_at: string | null;
-  marker: Marker;
+  flags: Flag[];
 }
 
 export interface ProgramsResponse {
@@ -41,7 +49,7 @@ export interface ProgramsResponse {
 export interface FiltersResponse {
   research_statuses: string[];
   eligibility_statuses: string[];
-  markers: string[];
+  flags: string[];
   countries: string[];
 }
 

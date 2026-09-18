@@ -90,12 +90,24 @@ CREATE TRIGGER programs_set_updated_at
 CREATE TABLE IF NOT EXISTS program_tags (
     program_id BIGINT PRIMARY KEY REFERENCES programs(id) ON DELETE CASCADE,
     visited_at TIMESTAMPTZ,
-    marker TEXT CHECK (marker IN ('snooze', 'important', 'want_to_apply')),
+    flags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT program_tags_flags_values CHECK (
+        flags <@ ARRAY[
+            'snooze',
+            'important',
+            'low_possibility',
+            'medium_possibility',
+            'high_possibility',
+            'for_applying',
+            'no_fit',
+            'NOT_RELEVANT'
+        ]::TEXT[]
+    )
 );
 
-CREATE INDEX IF NOT EXISTS program_tags_marker_idx ON program_tags(marker);
+CREATE INDEX IF NOT EXISTS program_tags_flags_idx ON program_tags USING GIN(flags);
 
 CREATE OR REPLACE FUNCTION set_program_tags_updated_at()
 RETURNS TRIGGER AS $$

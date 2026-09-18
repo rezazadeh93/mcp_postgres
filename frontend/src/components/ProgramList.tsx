@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchFilters, fetchPrograms, markVisited, setMarker } from '../api';
-import type { Filters, FiltersResponse, Program, ProgramsResponse } from '../types';
+import { fetchFilters, fetchPrograms, markVisited, setFlags } from '../api';
+import { rowHighlightClass } from '../flags';
+import type { Filters, FiltersResponse, Flag, Program, ProgramsResponse } from '../types';
 import FilterBar from './FilterBar';
+import FlagDropdown from './FlagDropdown';
 
 const defaultFilters: Filters = {
   q: '',
@@ -16,9 +18,7 @@ const defaultFilters: Filters = {
 };
 
 function classForRow(program: Program): string {
-  if (program.marker) return program.marker;
-  if (program.visited_at) return 'visited';
-  return '';
+  return rowHighlightClass(program.flags) || (program.visited_at ? 'visited' : '');
 }
 
 export default function ProgramList() {
@@ -44,7 +44,7 @@ export default function ProgramList() {
   const [options, setOptions] = useState<FiltersResponse>({
     research_statuses: [],
     eligibility_statuses: [],
-    markers: [],
+    flags: [],
     countries: [],
   });
   const [loading, setLoading] = useState(false);
@@ -102,16 +102,15 @@ export default function ProgramList() {
     navigate(`/program/${program.id}?${searchParams.toString()}`);
   };
 
-  const updateMarker = async (e: React.MouseEvent, program: Program, marker: Program['marker']) => {
-    e.stopPropagation();
-    await setMarker(program.id, marker);
+  const updateFlagsForProgram = async (program: Program, flags: Flag[]) => {
+    await setFlags(program.id, flags);
     setData((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
         programs: prev.programs.map((p) =>
           p.id === program.id
-            ? { ...p, marker: marker as Program['marker'], visited_at: p.visited_at || new Date().toISOString() }
+            ? { ...p, flags, visited_at: p.visited_at || new Date().toISOString() }
             : p
         ),
       };
@@ -192,22 +191,10 @@ export default function ProgramList() {
                     </td>
                     <td>{program.application_deadline ?? '-'}</td>
                     <td className="col-fit">
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {[
-                          { key: 'snooze', label: 'Snooze' },
-                          { key: 'important', label: 'Important' },
-                          { key: 'want_to_apply', label: 'Apply' },
-                        ].map(({ key, label }) => (
-                          <button
-                            key={key}
-                            className={`btn-sm ${program.marker === key ? 'active' : 'btn-secondary'}`}
-                            title={label}
-                            onClick={(e) => updateMarker(e, program, program.marker === key ? null : (key as Program['marker']))}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
+                      <FlagDropdown
+                        flags={program.flags}
+                        onChange={(flags) => updateFlagsForProgram(program, flags)}
+                      />
                     </td>
                   </tr>
                 ))}
