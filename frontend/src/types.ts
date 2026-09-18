@@ -35,7 +35,7 @@ export interface Program {
   created_at: string;
   updated_at: string;
   visited_at: string | null;
-  flags: Flag[];
+  flags: Flag[] | null;
 }
 
 export interface ProgramsResponse {

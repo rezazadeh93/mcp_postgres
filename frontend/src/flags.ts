@@ -23,23 +23,39 @@ export const STATUS_FLAGS: readonly Flag[] = ['snooze', 'important'];
 
 export const OUTCOME_FLAGS: readonly Flag[] = ['for_applying', ...EXCLUSION_FLAGS];
 
-export function hasFlag(flags: readonly Flag[], flag: Flag): boolean {
-  return flags.includes(flag);
+function normalizeFlags(flags: readonly Flag[] | null | undefined): Flag[] {
+  return Array.isArray(flags) ? (flags as Flag[]) : [];
 }
 
-export function possibilityFlag(flags: readonly Flag[]): Flag | undefined {
-  return POSSIBILITY_FLAGS.find((f) => flags.includes(f));
+export function hasFlag(
+  flags: readonly Flag[] | null | undefined,
+  flag: Flag
+): boolean {
+  return normalizeFlags(flags).includes(flag);
 }
 
-export function exclusionFlag(flags: readonly Flag[]): Flag | undefined {
-  return EXCLUSION_FLAGS.find((f) => flags.includes(f));
+export function possibilityFlag(
+  flags: readonly Flag[] | null | undefined
+): Flag | undefined {
+  return POSSIBILITY_FLAGS.find((f) => hasFlag(flags, f));
 }
 
-export function canToggleForApplying(flags: readonly Flag[]): boolean {
+export function exclusionFlag(
+  flags: readonly Flag[] | null | undefined
+): Flag | undefined {
+  return EXCLUSION_FLAGS.find((f) => hasFlag(flags, f));
+}
+
+export function canToggleForApplying(
+  flags: readonly Flag[] | null | undefined
+): boolean {
   return possibilityFlag(flags) !== undefined && exclusionFlag(flags) === undefined;
 }
 
-export function isFlagDisabled(flags: readonly Flag[], flag: Flag): boolean {
+export function isFlagDisabled(
+  flags: readonly Flag[] | null | undefined,
+  flag: Flag
+): boolean {
   if (POSSIBILITY_FLAGS.includes(flag)) {
     return exclusionFlag(flags) !== undefined;
   }
@@ -49,8 +65,11 @@ export function isFlagDisabled(flags: readonly Flag[], flag: Flag): boolean {
   return false;
 }
 
-export function toggleFlag(current: readonly Flag[], flag: Flag): Flag[] {
-  const flags = [...current];
+export function toggleFlag(
+  current: readonly Flag[] | null | undefined,
+  flag: Flag
+): Flag[] {
+  const flags = normalizeFlags(current);
 
   if (STATUS_FLAGS.includes(flag)) {
     return flags.includes(flag)
@@ -96,13 +115,16 @@ export function resetFlags(): Flag[] {
   return [];
 }
 
-export function rowHighlightClass(flags: readonly Flag[]): string {
-  if (flags.includes('important')) return 'important';
-  if (flags.includes('snooze')) return 'snooze';
-  if (flags.includes('no_fit') || flags.includes('NOT_RELEVANT')) return 'excluded';
-  if (flags.includes('for_applying')) return 'for_applying';
-  if (flags.includes('high_possibility')) return 'high_possibility';
-  if (flags.includes('medium_possibility')) return 'medium_possibility';
-  if (flags.includes('low_possibility')) return 'low_possibility';
+export function rowHighlightClass(
+  flags: readonly Flag[] | null | undefined
+): string {
+  const list = normalizeFlags(flags);
+  if (list.includes('important')) return 'important';
+  if (list.includes('snooze')) return 'snooze';
+  if (list.includes('no_fit') || list.includes('NOT_RELEVANT')) return 'excluded';
+  if (list.includes('for_applying')) return 'for_applying';
+  if (list.includes('high_possibility')) return 'high_possibility';
+  if (list.includes('medium_possibility')) return 'medium_possibility';
+  if (list.includes('low_possibility')) return 'low_possibility';
   return '';
 }

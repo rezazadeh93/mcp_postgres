@@ -3,7 +3,7 @@ import type { Flag } from '../types';
 import FlagControls from './FlagControls';
 
 interface FlagDropdownProps {
-  flags: Flag[];
+  flags: Flag[] | null;
   onChange: (flags: Flag[]) => void;
 }
 
@@ -23,7 +23,7 @@ export default function FlagDropdown({ flags, onChange }: FlagDropdownProps) {
     }
   }, [open]);
 
-  const activeCount = flags.length;
+  const activeCount = flags?.length ?? 0;
   const label = activeCount > 0 ? `Flags (${activeCount})` : 'Flags';
 
   const stopPropagation = (e: React.MouseEvent) => {

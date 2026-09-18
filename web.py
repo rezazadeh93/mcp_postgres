@@ -141,7 +141,7 @@ def _build_programs_query() -> tuple[str, list[Any], int, int, int]:
     data_sql = (
         "SELECT "
         + ", ".join(LIST_COLUMNS)
-        + ", t.visited_at, t.flags"
+        + ", t.visited_at, COALESCE(t.flags, ARRAY[]::TEXT[]) AS flags"
         + " FROM programs p"
         + " LEFT JOIN program_tags t ON t.program_id = p.id"
         + where_sql
@@ -182,7 +182,7 @@ def api_get_program(program_id: int):
     with db() as conn:
         row = conn.execute(
             """
-            SELECT p.*, t.visited_at, t.flags
+            SELECT p.*, t.visited_at, COALESCE(t.flags, ARRAY[]::TEXT[]) AS flags
             FROM programs p
             LEFT JOIN program_tags t ON t.program_id = p.id
             WHERE p.id = %s

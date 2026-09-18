@@ -209,15 +209,15 @@ tr.for_applying {
 }
 
 tr.low_possibility {
-  background: #fff3e0;
+  background: #b2dfdb;
 }
 
 tr.medium_possibility {
-  background: #e3f2fd;
+  background: #4db6ac;
 }
 
 tr.high_possibility {
-  background: #e8f5e9;
+  background: #009688;
 }
 
 tr.excluded,
@@ -230,7 +230,7 @@ tr.visited {
   background: #f1f3f5;
 }
 
-tr.snooze:hover,
+/* tr.snooze:hover,
 tr.important:hover,
 tr.for_applying:hover,
 tr.low_possibility:hover,
@@ -241,7 +241,7 @@ tr.no_fit:hover,
 tr.NOT_RELEVANT:hover,
 tr.visited:hover {
   filter: brightness(0.97);
-}
+} */
 
 .col-fit {
   width: 1%;

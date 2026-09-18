@@ -11,7 +11,7 @@ import {
 } from '../flags';
 
 interface FlagControlsProps {
-  flags: Flag[];
+  flags: Flag[] | null;
   onChange: (flags: Flag[]) => void;
 }
 
@@ -19,7 +19,7 @@ interface FlagGroupProps {
   title: string;
   labels: Record<Flag, string>;
   groupFlags: readonly Flag[];
-  current: readonly Flag[];
+  current: readonly Flag[] | null;
   onToggle: (flag: Flag) => void;
 }
 
