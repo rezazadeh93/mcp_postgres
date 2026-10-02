@@ -84,13 +84,15 @@ header p {
 }
 
 input,
-select {
+select,
+textarea {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.95rem;
   background: var(--surface);
   color: var(--text);
+  font-family: inherit;
 }
 
 input[type="number"] {
@@ -386,6 +388,10 @@ tr.visited:hover {
   margin-top: 12px;
 }
 
+.marker-bar > div {
+  width: 100%;
+}
+
 .marker-bar button.active {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
@@ -401,7 +407,7 @@ tr.visited:hover {
   top: 100%;
   right: 0;
   z-index: 100;
-  min-width: 220px;
+  min-width: 280px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -436,6 +442,13 @@ tr.visited:hover {
   width: 100%;
   justify-content: center;
   margin-top: 4px;
+}
+
+.flag-note {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  line-height: 1.4;
 }
 
 @media (max-width: 768px) {

@@ -49,6 +49,14 @@ export async function setFlags(id: number, flags: Flag[]): Promise<void> {
   });
 }
 
+export async function setNote(id: number, note: string): Promise<void> {
+  await fetchJson<{ note: string }>(`${API_PREFIX}/programs/${id}/marker`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ note }),
+  });
+}
+
 export async function fetchFilters(): Promise<FiltersResponse> {
   return fetchJson<FiltersResponse>(`${API_PREFIX}/filters`);
 }

@@ -4,10 +4,12 @@ import FlagControls from './FlagControls';
 
 interface FlagDropdownProps {
   flags: Flag[] | null;
+  note: string | null;
   onChange: (flags: Flag[]) => void;
+  onNoteChange: (note: string) => void;
 }
 
-export default function FlagDropdown({ flags, onChange }: FlagDropdownProps) {
+export default function FlagDropdown({ flags, note, onChange, onNoteChange }: FlagDropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -24,7 +26,10 @@ export default function FlagDropdown({ flags, onChange }: FlagDropdownProps) {
   }, [open]);
 
   const activeCount = flags?.length ?? 0;
-  const label = activeCount > 0 ? `Flags (${activeCount})` : 'Flags';
+  const hasNote = Boolean(note?.trim());
+  let label = 'Flags';
+  if (activeCount > 0) label = `Flags (${activeCount})`;
+  if (hasNote) label += ' · note';
 
   const stopPropagation = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -34,14 +39,14 @@ export default function FlagDropdown({ flags, onChange }: FlagDropdownProps) {
     <div className="flag-dropdown" ref={ref} onClick={stopPropagation}>
       <button
         type="button"
-        className={`btn-sm ${activeCount > 0 ? 'active' : 'btn-secondary'}`}
+        className={`btn-sm ${activeCount > 0 || hasNote ? 'active' : 'btn-secondary'}`}
         onClick={() => setOpen((prev) => !prev)}
       >
         {label} ▾
       </button>
       {open && (
         <div className="flag-dropdown-menu" onClick={stopPropagation}>
-          <FlagControls flags={flags} onChange={onChange} />
+          <FlagControls flags={flags} note={note} onChange={onChange} onNoteChange={onNoteChange} />
         </div>
       )}
     </div>

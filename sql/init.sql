@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS program_tags (
     program_id BIGINT PRIMARY KEY REFERENCES programs(id) ON DELETE CASCADE,
     visited_at TIMESTAMPTZ,
     flags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+    note TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT program_tags_flags_values CHECK (

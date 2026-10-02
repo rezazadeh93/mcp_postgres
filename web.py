@@ -141,7 +141,7 @@ def _build_programs_query() -> tuple[str, list[Any], int, int, int]:
     data_sql = (
         "SELECT "
         + ", ".join(LIST_COLUMNS)
-        + ", t.visited_at, COALESCE(t.flags, ARRAY[]::TEXT[]) AS flags"
+        + ", t.visited_at, COALESCE(t.flags, ARRAY[]::TEXT[]) AS flags, COALESCE(t.note, '') AS note"
         + " FROM programs p"
         + " LEFT JOIN program_tags t ON t.program_id = p.id"
         + where_sql
@@ -182,7 +182,7 @@ def api_get_program(program_id: int):
     with db() as conn:
         row = conn.execute(
             """
-            SELECT p.*, t.visited_at, COALESCE(t.flags, ARRAY[]::TEXT[]) AS flags
+            SELECT p.*, t.visited_at, COALESCE(t.flags, ARRAY[]::TEXT[]) AS flags, COALESCE(t.note, '') AS note
             FROM programs p
             LEFT JOIN program_tags t ON t.program_id = p.id
             WHERE p.id = %s
@@ -259,28 +259,74 @@ def _normalize_flags(data: dict[str, Any]) -> list[str]:
     return list(dict.fromkeys(flags))
 
 
+NOTE_MAX_LEN = 4000
+
+
+def _normalize_note(data: dict[str, Any]) -> str | None:
+    if "note" not in data:
+        return None
+    raw = data.get("note")
+    if raw is None:
+        return ""
+    if not isinstance(raw, str):
+        abort(400, description="note must be a string")
+    if len(raw) > NOTE_MAX_LEN:
+        abort(400, description=f"note must be at most {NOTE_MAX_LEN} characters")
+    return raw
+
+
 @app.route("/api/programs/<int:program_id>/marker", methods=["POST"])
 def api_set_marker(program_id: int):
     data = request.get_json(silent=True) or {}
-    flags = _normalize_flags(data)
+    has_flags = "flags" in data or "marker" in data
+    flags = _normalize_flags(data) if has_flags else None
+    note = _normalize_note(data)
+    if flags is None and note is None:
+        abort(400, description="request must include 'flags' array, legacy 'marker' field, or 'note'")
 
     with db() as conn:
         exists = conn.execute("SELECT 1 FROM programs WHERE id = %s", (program_id,)).fetchone()
         if not exists:
             abort(404, description="Program not found")
 
-        conn.execute(
-            """
-            INSERT INTO program_tags (program_id, visited_at, flags)
-            VALUES (%s, now(), %s)
-            ON CONFLICT (program_id)
-            DO UPDATE SET flags = %s, visited_at = now()
-            """,
-            (program_id, flags, flags),
-        )
+        if flags is not None and note is not None:
+            conn.execute(
+                """
+                INSERT INTO program_tags (program_id, visited_at, flags, note)
+                VALUES (%s, now(), %s, %s)
+                ON CONFLICT (program_id)
+                DO UPDATE SET flags = EXCLUDED.flags, note = EXCLUDED.note, visited_at = now()
+                """,
+                (program_id, flags, note),
+            )
+        elif flags is not None:
+            conn.execute(
+                """
+                INSERT INTO program_tags (program_id, visited_at, flags)
+                VALUES (%s, now(), %s)
+                ON CONFLICT (program_id)
+                DO UPDATE SET flags = EXCLUDED.flags, visited_at = now()
+                """,
+                (program_id, flags),
+            )
+        else:
+            conn.execute(
+                """
+                INSERT INTO program_tags (program_id, visited_at, note)
+                VALUES (%s, now(), %s)
+                ON CONFLICT (program_id)
+                DO UPDATE SET note = EXCLUDED.note, visited_at = now()
+                """,
+                (program_id, note),
+            )
         conn.commit()
 
-    return jsonify({"flags": flags})
+    body: dict[str, Any] = {}
+    if flags is not None:
+        body["flags"] = flags
+    if note is not None:
+        body["note"] = note
+    return jsonify(body)
 
 
 @app.route("/api/filters", methods=["GET"])

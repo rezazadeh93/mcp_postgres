@@ -32,6 +32,9 @@ docker compose exec postgres psql -U hermes -d hermes_db -f /tmp/migration_001_t
 
 docker compose cp sql/migration_002_flags.sql postgres:/tmp/migration_002_flags.sql
 docker compose exec postgres psql -U hermes -d hermes_db -f /tmp/migration_002_flags.sql
+
+docker compose cp sql/migration_003_notes.sql postgres:/tmp/migration_003_notes.sql
+docker compose exec postgres psql -U hermes -d hermes_db -f /tmp/migration_003_notes.sql
 ```
 
 Wait until both services are healthy:
@@ -73,9 +76,9 @@ Clicking a program marks it as visited and tints the row. You can tag programs w
 | Outcome | `no_fit` | Does not fit |
 | Outcome | `NOT_RELEVANT` | Not relevant |
 
-`snooze` and `important` can be active together. Possibility flags are mutually exclusive. `no_fit` / `NOT_RELEVANT` disable possibility flags and clear `for_applying`. Each row has a **Flags** dropdown to set or reset flags.
+`snooze` and `important` can be active together. Possibility flags are mutually exclusive. `no_fit` / `NOT_RELEVANT` disable possibility flags and clear `for_applying`. Each row has a **Flags** dropdown to set or reset flags, plus an optional free-text **note**. Resetting flags does not clear the note.
 
-Flags are stored as a `TEXT[]` array in the `program_tags` Postgres table and persist across sessions.
+Flags and notes are stored on the `program_tags` Postgres table (`flags TEXT[]`, `note TEXT`) and persist across sessions.
 
 ## Wire Hermes (streamable HTTP)
 

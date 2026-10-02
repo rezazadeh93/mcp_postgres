@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { fetchProgram, markVisited, setFlags } from '../api';
+import { fetchProgram, markVisited, setFlags, setNote } from '../api';
 import type { Flag, Program } from '../types';
 import FlagControls from './FlagControls';
 
@@ -54,6 +54,14 @@ export default function ProgramDetail() {
     );
   };
 
+  const updateNoteForProgram = async (note: string) => {
+    if (!program) return;
+    await setNote(program.id, note);
+    setProgram((prev) =>
+      prev ? { ...prev, note, visited_at: prev.visited_at || new Date().toISOString() } : prev
+    );
+  };
+
   if (loading) return <div className="card">Loading…</div>;
   if (error) return <div className="card" style={{ color: 'var(--danger)' }}>{error}</div>;
   if (!program) return <div className="card">Program not found.</div>;
@@ -78,7 +86,12 @@ export default function ProgramDetail() {
 
       <div className="card">
         <div className="marker-bar">
-          <FlagControls flags={program.flags} onChange={updateFlagsForProgram} />
+          <FlagControls
+            flags={program.flags}
+            note={program.note}
+            onChange={updateFlagsForProgram}
+            onNoteChange={updateNoteForProgram}
+          />
         </div>
       </div>
 

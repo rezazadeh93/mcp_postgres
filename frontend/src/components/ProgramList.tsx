@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchFilters, fetchPrograms, markVisited, setFlags } from '../api';
+import { fetchFilters, fetchPrograms, markVisited, setFlags, setNote } from '../api';
 import { rowHighlightClass } from '../flags';
 import type { Filters, FiltersResponse, Flag, Program, ProgramsResponse } from '../types';
 import FilterBar from './FilterBar';
@@ -102,19 +102,28 @@ export default function ProgramList() {
     navigate(`/program/${program.id}?${searchParams.toString()}`);
   };
 
-  const updateFlagsForProgram = async (program: Program, flags: Flag[]) => {
-    await setFlags(program.id, flags);
+  const patchProgram = (programId: number, patch: Partial<Program>) => {
     setData((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
         programs: prev.programs.map((p) =>
-          p.id === program.id
-            ? { ...p, flags, visited_at: p.visited_at || new Date().toISOString() }
+          p.id === programId
+            ? { ...p, ...patch, visited_at: p.visited_at || new Date().toISOString() }
             : p
         ),
       };
     });
+  };
+
+  const updateFlagsForProgram = async (program: Program, flags: Flag[]) => {
+    await setFlags(program.id, flags);
+    patchProgram(program.id, { flags });
+  };
+
+  const updateNoteForProgram = async (program: Program, note: string) => {
+    await setNote(program.id, note);
+    patchProgram(program.id, { note });
   };
 
   const totalPages = data?.total_pages || 1;
@@ -193,7 +202,9 @@ export default function ProgramList() {
                     <td className="col-fit">
                       <FlagDropdown
                         flags={program.flags}
+                        note={program.note}
                         onChange={(flags) => updateFlagsForProgram(program, flags)}
+                        onNoteChange={(note) => updateNoteForProgram(program, note)}
                       />
                     </td>
                   </tr>
