@@ -108,8 +108,8 @@ The server stays up in Docker. Hermes treats it as a remote MCP endpoint.
 
 | Tool | Purpose |
 |---|---|
-| `list_programs` | Compact list. Filters: `research_status`, `country`, `min_overall_fit`, `q`. Default 20 rows, max 50. Does not return curriculum text. |
-| `get_program` | Full row by `program_id`. |
+| `list_programs` | Compact list. Filters: `research_status`, `country`, `min_overall_fit`, `q`. Default 20 rows, max 50. Does not return curriculum text. Includes `flags` and `note` from `program_tags`. |
+| `get_program` | Full row by `program_id`. Includes `flags` and `note` from `program_tags`. |
 | `add_program` | Insert. Duplicate `program_url` returns the existing id (`already_exists: true`). |
 | `update_program_fit` | Patch `backend_fit` / `overall_fit` and optional notes. Does not mark verified. |
 | `mark_program_verified` | Sets `research_status = verified` and `last_verified_at = now()`. |

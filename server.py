@@ -30,6 +30,9 @@ LIST_COLUMNS = (
     "application_deadline",
 )
 
+SELECT_LIST_COLUMNS = ", ".join(f"p.{c}" for c in LIST_COLUMNS)
+TAG_COLUMNS = ", COALESCE(t.flags, ARRAY[]::TEXT[]) AS flags, COALESCE(t.note, '') AS note"
+
 RESEARCH_STATUSES = {
     "discovered",
     "researching",
@@ -68,7 +71,10 @@ def list_programs(
     q: str | None = None,
     limit: int = LIST_LIMIT_DEFAULT,
 ) -> str:
-    """List programs as compact rows (no curriculum text). Filter by status, country, min fit, or name search."""
+    """List programs as compact rows (no curriculum text), including flags and notes.
+
+    Filter by status, country, min fit, or name search.
+    """
     if research_status is not None and research_status not in RESEARCH_STATUSES:
         raise ValueError(f"research_status must be one of: {sorted(RESEARCH_STATUSES)}")
     if min_overall_fit is not None and not (0 <= min_overall_fit <= 100):
@@ -79,27 +85,29 @@ def list_programs(
     params: list[Any] = []
 
     if research_status:
-        where.append("research_status = %s")
+        where.append("p.research_status = %s")
         params.append(research_status)
     if country:
-        where.append("country ILIKE %s")
+        where.append("p.country ILIKE %s")
         params.append(country)
     if min_overall_fit is not None:
-        where.append("overall_fit >= %s")
+        where.append("p.overall_fit >= %s")
         params.append(min_overall_fit)
     if q:
-        where.append("(university ILIKE %s OR program_name ILIKE %s)")
+        where.append("(p.university ILIKE %s OR p.program_name ILIKE %s)")
         like = f"%{q}%"
         params.extend([like, like])
 
     sql = (
         "SELECT "
-        + ", ".join(LIST_COLUMNS)
-        + " FROM programs"
+        + SELECT_LIST_COLUMNS
+        + TAG_COLUMNS
+        + " FROM programs p"
+        + " LEFT JOIN program_tags t ON t.program_id = p.id"
     )
     if where:
         sql += " WHERE " + " AND ".join(where)
-    sql += " ORDER BY overall_fit DESC NULLS LAST, id ASC LIMIT %s"
+    sql += " ORDER BY p.overall_fit DESC NULLS LAST, p.id ASC LIMIT %s"
     params.append(capped)
 
     with db() as conn:
@@ -111,10 +119,15 @@ def list_programs(
 
 @mcp.tool
 def get_program(program_id: int) -> str:
-    """Return the full program row by id."""
+    """Return the full program row by id, including flags and notes."""
     with db() as conn:
         row = conn.execute(
-            "SELECT * FROM programs WHERE id = %s",
+            """
+            SELECT p.*, COALESCE(t.flags, ARRAY[]::TEXT[]) AS flags, COALESCE(t.note, '') AS note
+            FROM programs p
+            LEFT JOIN program_tags t ON t.program_id = p.id
+            WHERE p.id = %s
+            """,
             (program_id,),
         ).fetchone()
 
