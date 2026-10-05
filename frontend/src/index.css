@@ -27,8 +27,14 @@ body {
 
 .app {
   max-width: 1200px;
-  margin: 0 auto;
+    margin: 0 auto;
   padding: 24px 16px;
+}
+
+.app-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 header {
@@ -203,7 +209,7 @@ tr.snooze {
 }
 
 tr.important {
-  background: #ffebee;
+  background: #fbebb6;
 }
 
 tr.for_applying {
@@ -215,11 +221,11 @@ tr.low_possibility {
 }
 
 tr.medium_possibility {
-  background: #4db6ac;
+  background: #80cbc4;
 }
 
 tr.high_possibility {
-  background: #009688;
+  background: #4db6ac;
 }
 
 tr.excluded,
@@ -407,13 +413,52 @@ tr.visited:hover {
   top: 100%;
   right: 0;
   z-index: 100;
-  min-width: 280px;
+    min-width: 280px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   padding: 10px;
   margin-top: 4px;
+}
+
+.flag-filter-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.flag-filter-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  min-width: 180px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  margin-top: 4px;
+}
+
+.flag-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.flag-filter-option:hover {
+  background: var(--bg);
+}
+
+.flag-filter-option input[type="checkbox"] {
+  margin: 0;
 }
 
 .flag-group {
@@ -451,13 +496,99 @@ tr.visited:hover {
   line-height: 1.4;
 }
 
+[data-theme="dark"] {
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --text: #e0e0e0;
+  --muted: #9e9e9e;
+  --border: #333333;
+  --primary: #5c9aff;
+  --primary-hover: #7badff;
+  --success: #4caf50;
+  --warning: #ffb74d;
+  --danger: #ef5350;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .btn-secondary {
+  background: #2c2c2c;
+  color: var(--text);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: #3a3a3a;
+}
+
+[data-theme="dark"] th {
+  background: #252525;
+}
+
+[data-theme="dark"] tr:hover {
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] .pagination a:hover {
+  background: #2a2a2a;
+}
+
+[data-theme="dark"] .badge {
+  background: #2c2c2c;
+  color: var(--text);
+}
+
+[data-theme="dark"] tr.snooze {
+  background: #3d3420;
+}
+
+[data-theme="dark"] tr.important {
+  background: #4a3720;
+}
+
+[data-theme="dark"] tr.for_applying {
+  background: #1b3a4b;
+}
+
+[data-theme="dark"] tr.low_possibility {
+  background: #1e3d3a;
+}
+
+[data-theme="dark"] tr.medium_possibility {
+  background: #224c46;
+}
+
+[data-theme="dark"] tr.high_possibility {
+  background: #265c54;
+}
+
+[data-theme="dark"] tr.excluded,
+[data-theme="dark"] tr.no_fit,
+[data-theme="dark"] tr.NOT_RELEVANT {
+  background: #3d2020;
+}
+
+[data-theme="dark"] tr.visited {
+  background: #252525;
+}
+
+[data-theme="dark"] .flag-dropdown-menu,
+[data-theme="dark"] .flag-filter-menu {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--surface);
+  color: var(--text);
+}
+
 @media (max-width: 768px) {
   .form-row {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .form-group {
+    .form-group {
     width: 100%;
   }
 

@@ -18,7 +18,9 @@ function buildQuery(filters: Partial<Filters>): string {
   if (filters.eligibility_status) params.set('eligibility_status', filters.eligibility_status);
   if (filters.country) params.set('country', filters.country);
   if (filters.min_overall_fit) params.set('min_overall_fit', filters.min_overall_fit);
+  if (filters.flags) params.set('flags', filters.flags);
   if (filters.sort) params.set('sort', filters.sort);
+  if (filters.sort_dir) params.set('sort_dir', filters.sort_dir);
   if (filters.page && filters.page > 1) params.set('page', String(filters.page));
   if (filters.per_page) params.set('per_page', String(filters.per_page));
   return params.toString();

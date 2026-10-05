@@ -63,7 +63,7 @@ SORTABLE_COLUMNS = {
     "university": "p.university",
     "program_name": "p.program_name",
     "country": "p.country",
-    "overall_fit": "p.overall_fit DESC NULLS LAST",
+    "overall_fit": "p.overall_fit",
     "application_deadline": "p.application_deadline",
     "created_at": "p.created_at",
 }
@@ -91,6 +91,7 @@ def _build_programs_query() -> tuple[str, list[Any], int, int, int]:
     eligibility_status = request.args.get("eligibility_status", "").strip() or None
     country = request.args.get("country", "").strip() or None
     min_overall_fit = request.args.get("min_overall_fit", "").strip() or None
+    flags = request.args.get("flags", "").strip() or None
     q = request.args.get("q", "").strip() or None
 
     where: list[str] = []
@@ -122,6 +123,14 @@ def _build_programs_query() -> tuple[str, list[Any], int, int, int]:
         where.append("p.overall_fit >= %s")
         params.append(fit)
 
+    if flags:
+        flag_list = [f.strip() for f in flags.split(",") if f.strip()]
+        invalid = sorted({f for f in flag_list if f not in VALID_FLAGS})
+        if invalid:
+            abort(400, description=f"invalid flags: {invalid}; allowed: {sorted(VALID_FLAGS)}")
+        where.append("t.flags && %s::TEXT[]")
+        params.append(flag_list)
+
     if q:
         where.append("(p.university ILIKE %s OR p.program_name ILIKE %s)")
         like = f"%{q}%"
@@ -129,14 +138,25 @@ def _build_programs_query() -> tuple[str, list[Any], int, int, int]:
 
     where_sql = " WHERE " + " AND ".join(where) if where else ""
 
-    count_sql = f"SELECT COUNT(*) FROM programs p{where_sql}"
+    count_sql = (
+        "SELECT COUNT(*) FROM programs p"
+        + " LEFT JOIN program_tags t ON t.program_id = p.id"
+        + where_sql
+    )
     with db() as conn:
         total = conn.execute(count_sql, list(params)).fetchone()["count"]
 
     sort_key = request.args.get("sort", "overall_fit")
     if sort_key not in SORTABLE_COLUMNS:
         sort_key = "overall_fit"
+    sort_dir = request.args.get("sort_dir", "desc").strip().lower()
+    if sort_dir not in {"asc", "desc"}:
+        sort_dir = "desc"
     order_clause = SORTABLE_COLUMNS[sort_key]
+    if sort_key == "overall_fit":
+        order_clause += f" {sort_dir.upper()} NULLS LAST"
+    else:
+        order_clause += f" {sort_dir.upper()}"
 
     data_sql = (
         "SELECT "

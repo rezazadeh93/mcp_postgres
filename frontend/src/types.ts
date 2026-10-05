@@ -60,7 +60,9 @@ export interface Filters {
   eligibility_status: string;
   country: string;
   min_overall_fit: string;
+  flags: string;
   sort: string;
+  sort_dir: 'asc' | 'desc';
   page: number;
   per_page: number;
 }

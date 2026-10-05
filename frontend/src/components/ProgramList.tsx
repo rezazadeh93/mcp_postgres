@@ -7,12 +7,14 @@ import FilterBar from './FilterBar';
 import FlagDropdown from './FlagDropdown';
 
 const defaultFilters: Filters = {
-  q: '',
+    q: '',
   research_status: '',
   eligibility_status: '',
   country: '',
   min_overall_fit: '',
+  flags: '',
   sort: 'overall_fit',
+  sort_dir: 'desc',
   page: 1,
   per_page: 20,
 };
@@ -33,7 +35,9 @@ export default function ProgramList() {
       eligibility_status: searchParams.get('eligibility_status') || '',
       country: searchParams.get('country') || '',
       min_overall_fit: searchParams.get('min_overall_fit') || '',
+      flags: searchParams.get('flags') || '',
       sort: searchParams.get('sort') || 'overall_fit',
+      sort_dir: (searchParams.get('sort_dir') as 'asc' | 'desc') || 'desc',
       page: Number(searchParams.get('page')) || 1,
       per_page: Number(searchParams.get('per_page')) || 20,
     };
@@ -60,7 +64,7 @@ export default function ProgramList() {
     fetchPrograms(filters)
       .then((res) => {
         setData(res);
-        setFilters((f) => ({ ...f, page: res.page }));
+        setFilters((f) => (f.page === res.page ? f : { ...f, page: res.page }));
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -85,7 +89,9 @@ export default function ProgramList() {
     if (next.eligibility_status) params.set('eligibility_status', next.eligibility_status);
     if (next.country) params.set('country', next.country);
     if (next.min_overall_fit) params.set('min_overall_fit', next.min_overall_fit);
+    if (next.flags) params.set('flags', next.flags);
     if (next.sort !== 'overall_fit') params.set('sort', next.sort);
+    if (next.sort_dir !== 'desc') params.set('sort_dir', next.sort_dir);
     if (next.page > 1) params.set('page', String(next.page));
     if (next.per_page !== 20) params.set('per_page', String(next.per_page));
     setSearchParams(params);

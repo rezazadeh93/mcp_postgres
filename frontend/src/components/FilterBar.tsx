@@ -1,4 +1,6 @@
-import type { Filters, FiltersResponse } from '../types';
+import { useEffect, useRef, useState } from 'react';
+import { FLAG_LABELS } from '../flags';
+import type { Filters, FiltersResponse, Flag } from '../types';
 
 interface FilterBarProps {
   filters: Filters;
@@ -19,6 +21,72 @@ const sortOptions = [
 ];
 
 const perPageOptions = [10, 20, 50, 100];
+
+function parseFlagFilter(value: string): Flag[] {
+  return value
+    .split(',')
+    .map((f) => f.trim())
+    .filter(Boolean) as Flag[];
+}
+
+function FlagFilterDropdown({
+  flags,
+  selected,
+  onChange,
+}: {
+  flags: string[];
+  selected: Flag[];
+  onChange: (selected: Flag[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [open]);
+
+  const toggle = (flag: Flag) => {
+    onChange(
+      selected.includes(flag) ? selected.filter((f) => f !== flag) : [...selected, flag]
+    );
+  };
+
+  const label = selected.length > 0 ? `Flags (${selected.length})` : 'All flags';
+
+  return (
+    <div className="flag-filter-dropdown" ref={ref}>
+      <button
+        type="button"
+        className={`btn-sm ${selected.length > 0 ? 'active' : 'btn-secondary'}`}
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        {label} ▾
+      </button>
+      {open && (
+        <div className="flag-filter-menu">
+          {flags.map((flag) => (
+            <label key={flag} className="flag-filter-option">
+              <input
+                type="checkbox"
+                checked={selected.includes(flag as Flag)}
+                onChange={() => toggle(flag as Flag)}
+              />
+              <span>{FLAG_LABELS[flag as Flag]}</span>
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function FilterBar({ filters, options, onChange, onApply, onReset }: FilterBarProps) {
   return (
@@ -97,6 +165,17 @@ export default function FilterBar({ filters, options, onChange, onApply, onReset
         </div>
 
         <div className="form-group">
+          <label>Flags</label>
+          <FlagFilterDropdown
+            flags={options.flags}
+            selected={parseFlagFilter(filters.flags)}
+            onChange={(selected) =>
+              onChange({ flags: selected.join(','), page: 1 })
+            }
+          />
+        </div>
+
+        <div className="form-group">
           <label htmlFor="sort">Sort by</label>
           <select
             id="sort"
@@ -108,6 +187,20 @@ export default function FilterBar({ filters, options, onChange, onApply, onReset
                 {o.label}
               </option>
             ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="sort_dir">Order</label>
+          <select
+            id="sort_dir"
+            value={filters.sort_dir}
+            onChange={(e) =>
+              onChange({ sort_dir: e.target.value as 'asc' | 'desc', page: 1 })
+            }
+          >
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
           </select>
         </div>
 
