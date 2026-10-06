@@ -24,6 +24,7 @@ export interface Program {
   academic_eligibility: string | null;
   english_requirement: string | null;
   work_experience_requirement: string | null;
+  tuition_fee: string | null;
   application_start: string | null;
   application_deadline: string | null;
   intake: string | null;

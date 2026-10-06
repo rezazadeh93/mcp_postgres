@@ -178,7 +178,7 @@ export default function ProgramList() {
                   <th>Degree</th>
                   <th className="text-right">Fit</th>
                   <th>Status</th>
-                  <th>Eligibility</th>
+                  <th>Tuition fee</th>
                   <th>Deadline</th>
                   <th>Actions</th>
                 </tr>
@@ -201,9 +201,7 @@ export default function ProgramList() {
                         {program.research_status.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td>
-                      <span className="badge">{program.eligibility_status.replace(/_/g, ' ')}</span>
-                    </td>
+                    <td>{program.tuition_fee || '-'}</td>
                     <td>{program.application_deadline ?? '-'}</td>
                     <td className="col-fit">
                       <FlagDropdown

@@ -17,6 +17,7 @@ CREATE TABLE programs (
     academic_eligibility TEXT,
     english_requirement TEXT,
     work_experience_requirement TEXT,
+    tuition_fee TEXT,
 
     application_start DATE,
     application_deadline DATE,

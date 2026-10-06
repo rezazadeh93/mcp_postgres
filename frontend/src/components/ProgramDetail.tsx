@@ -139,6 +139,9 @@ export default function ProgramDetail() {
           <dt>Work experience</dt>
           <dd style={{ whiteSpace: 'pre-wrap' }}>{formatValue(program.work_experience_requirement)}</dd>
 
+          <dt>Tuition fee</dt>
+          <dd style={{ whiteSpace: 'pre-wrap' }}>{formatValue(program.tuition_fee)}</dd>
+
           <dt>Application start</dt>
           <dd>{formatValue(program.application_start)}</dd>
 

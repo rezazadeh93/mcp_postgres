@@ -55,6 +55,7 @@ LIST_COLUMNS = [
     "p.overall_fit",
     "p.research_status",
     "p.eligibility_status",
+    "p.tuition_fee",
     "p.application_deadline",
 ]
 

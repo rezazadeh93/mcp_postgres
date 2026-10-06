@@ -27,6 +27,7 @@ LIST_COLUMNS = (
     "overall_fit",
     "research_status",
     "eligibility_status",
+    "tuition_fee",
     "application_deadline",
 )
 
@@ -152,6 +153,7 @@ def add_program(
     academic_eligibility: str | None = None,
     english_requirement: str | None = None,
     work_experience_requirement: str | None = None,
+    tuition_fee: str | None = None,
     application_start: str | None = None,
     application_deadline: str | None = None,
     intake: str | None = None,
@@ -176,14 +178,14 @@ def add_program(
         INSERT INTO programs (
             university, program_name, country, city, degree_type, degree_level,
             program_url, subject_area, curriculum_summary, backend_fit, overall_fit,
-            academic_eligibility, english_requirement, work_experience_requirement,
+            academic_eligibility, english_requirement, work_experience_requirement, tuition_fee,
             application_start, application_deadline, intake,
             research_status, eligibility_status, uncertainties, source_urls
         )
         VALUES (
             %s, %s, %s, %s, %s, %s,
             %s, %s, %s, %s, %s,
-            %s, %s, %s,
+            %s, %s, %s, %s,
             %s, %s, %s,
             %s, %s, %s, %s
         )
@@ -205,6 +207,7 @@ def add_program(
         academic_eligibility,
         english_requirement,
         work_experience_requirement,
+        tuition_fee,
         start,
         deadline,
         intake,
@@ -240,10 +243,19 @@ def update_program_fit(
     overall_fit: int | None = None,
     curriculum_summary: str | None = None,
     uncertainties: str | None = None,
+    tuition_fee: str | None = None,
 ) -> str:
-    """Patch fit scores and optional research notes. Does not change verification status."""
-    if backend_fit is None and overall_fit is None and curriculum_summary is None and uncertainties is None:
-        raise ValueError("Provide at least one of backend_fit, overall_fit, curriculum_summary, uncertainties")
+    """Patch fit scores, tuition fee, and optional research notes. Does not change verification status."""
+    if (
+        backend_fit is None
+        and overall_fit is None
+        and curriculum_summary is None
+        and uncertainties is None
+        and tuition_fee is None
+    ):
+        raise ValueError(
+            "Provide at least one of backend_fit, overall_fit, curriculum_summary, uncertainties, tuition_fee"
+        )
     for name, value in (("backend_fit", backend_fit), ("overall_fit", overall_fit)):
         if value is not None and not (0 <= value <= 100):
             raise ValueError(f"{name} must be between 0 and 100")
@@ -262,9 +274,12 @@ def update_program_fit(
     if uncertainties is not None:
         sets.append("uncertainties = %s")
         params.append(uncertainties)
+    if tuition_fee is not None:
+        sets.append("tuition_fee = %s")
+        params.append(tuition_fee)
 
     params.append(program_id)
-    sql = f"UPDATE programs SET {', '.join(sets)} WHERE id = %s RETURNING id, backend_fit, overall_fit"
+    sql = f"UPDATE programs SET {', '.join(sets)} WHERE id = %s RETURNING id, backend_fit, overall_fit, tuition_fee"
 
     with db() as conn:
         row = conn.execute(sql, params).fetchone()

@@ -18,6 +18,7 @@ overall_fit
 academic_eligibility
 english_requirement
 work_experience_requirement
+tuition_fee
 
 application_start
 application_deadline

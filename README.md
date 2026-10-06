@@ -35,6 +35,9 @@ docker compose exec postgres psql -U hermes -d hermes_db -f /tmp/migration_002_f
 
 docker compose cp sql/migration_003_notes.sql postgres:/tmp/migration_003_notes.sql
 docker compose exec postgres psql -U hermes -d hermes_db -f /tmp/migration_003_notes.sql
+
+docker compose cp sql/migration_004_tuition_fee.sql postgres:/tmp/migration_004_tuition_fee.sql
+docker compose exec postgres psql -U hermes -d hermes_db -f /tmp/migration_004_tuition_fee.sql
 ```
 
 Wait until both services are healthy:
@@ -111,7 +114,7 @@ The server stays up in Docker. Hermes treats it as a remote MCP endpoint.
 | `list_programs` | Compact list. Filters: `research_status`, `country`, `min_overall_fit`, `q`. Default 20 rows, max 50. Does not return curriculum text. Includes `flags` and `note` from `program_tags`. |
 | `get_program` | Full row by `program_id`. Includes `flags` and `note` from `program_tags`. |
 | `add_program` | Insert. Duplicate `program_url` returns the existing id (`already_exists: true`). |
-| `update_program_fit` | Patch `backend_fit` / `overall_fit` and optional notes. Does not mark verified. |
+| `update_program_fit` | Patch `backend_fit` / `overall_fit` / `tuition_fee` and optional notes. Does not mark verified. |
 | `mark_program_verified` | Sets `research_status = verified` and `last_verified_at = now()`. |
 
 ## Local server testing (no Docker)
